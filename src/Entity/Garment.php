@@ -2,43 +2,57 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\GarmentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\JoinTable;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(normalizationContext: ["groups" => ["garment:read"]])]
 #[ORM\Entity(repositoryClass: GarmentRepository::class)]
+
+
 class Garment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['garment:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['garment:read'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['garment:read'])]
     private ?string $type = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['garment:read'])]
     private ?string $material = null;
 
-    #[ORM\ManyToOne(inversedBy: 'garments')]
-    private ?User $user = null;
-
-    #[ORM\ManyToOne(inversedBy: 'garments')]
-    private ?Order $orders = null;
+    
 
     /**
      * @var Collection<int, Service>
      */
     #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'garments')]
-    private Collection $service;
+    #[Groups(['service:read'])]
+    private Collection $services;
+
+    /**
+     * @var Collection<int, Item>
+     */
+    #[ORM\OneToMany(targetEntity: Item::class, mappedBy: 'garment')]
+       private Collection $items;
 
     public function __construct()
     {
-        $this->service = new ArrayCollection();
+        $this->services = new ArrayCollection();
+        $this->items = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -82,42 +96,19 @@ class Garment
         return $this;
     }
 
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
-    public function setUser(?User $user): static
-    {
-        $this->user = $user;
-
-        return $this;
-    }
-
-    public function getOrders(): ?Order
-    {
-        return $this->orders;
-    }
-
-    public function setOrders(?Order $orders): static
-    {
-        $this->orders = $orders;
-
-        return $this;
-    }
 
     /**
      * @return Collection<int, Service>
      */
     public function getService(): Collection
     {
-        return $this->service;
+        return $this->services;
     }
 
     public function addService(Service $service): static
     {
-        if (!$this->service->contains($service)) {
-            $this->service->add($service);
+        if (!$this->services->contains($service)) {
+            $this->services->add($service);
         }
 
         return $this;
@@ -125,7 +116,37 @@ class Garment
 
     public function removeService(Service $service): static
     {
-        $this->service->removeElement($service);
+        $this->services->removeElement($service);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Item>
+     */
+    public function getItems(): Collection
+    {
+        return $this->items;
+    }
+
+    public function addItem(Item $item): static
+    {
+        if (!$this->items->contains($item)) {
+            $this->items->add($item);
+            $item->setGarment($this);
+        }
+
+        return $this;
+    }
+
+    public function removeItem(Item $item): static
+    {
+        if ($this->items->removeElement($item)) {
+            // set the owning side to null (unless already changed)
+            if ($item->getGarment() === $this) {
+                $item->setGarment(null);
+            }
+        }
 
         return $this;
     }

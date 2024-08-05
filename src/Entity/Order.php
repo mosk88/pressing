@@ -2,40 +2,53 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\OrderRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(normalizationContext: ["groups" => ["order:read"]])]
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: '`order`')]
+
 class Order
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['order:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['order:read'])]
     private ?\DateTimeInterface $orderDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['order:read'])]
     private ?\DateTimeInterface $deliveryDate = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['order:read'])]
     private ?string $status = null;
 
     #[ORM\Column]
+    #[Groups(['order:read'])]
     private ?float $amount = null;
+    
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['order:read'])]
     private ?\DateTimeInterface $paymentDate = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['order:read'])]
     private ?string $paymentMethod = null;
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
+    
     private ?User $user = null;
 
     /**

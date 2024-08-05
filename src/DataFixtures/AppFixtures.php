@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Garment;
+use App\Entity\Item;
 use App\Entity\Order;
 use App\Entity\Service;
 use App\Entity\User;
@@ -22,6 +23,7 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create();
+
         // Create admin user
         for ($i = 0; $i < 10; $i++) {
             $admin = new User();
@@ -29,7 +31,7 @@ class AppFixtures extends Fixture
             $admin->setLastName($faker->lastName);
             $admin->setEmail($faker->email);
             $admin->setPassword($this->passwordHasher->hashPassword($admin, 'password'));
-            $admin->setRoles([$faker->randomElement(['ROLE_ADMIN','ROLE_USER','ROLE_CLIENT'])]);
+            $admin->setRoles([$faker->randomElement(['ROLE_ADMIN', 'ROLE_USER', 'ROLE_CLIENT'])]);
             $manager->persist($admin);
         }
 
@@ -50,27 +52,43 @@ class AppFixtures extends Fixture
 
             $manager->persist($order);
         }
+        $services = [];
+        $serviceNames = ['Washing', 'Ironing', 'Dry Cleaning', 'Folding'];
+
+        foreach ($serviceNames as $service) {
+            $service = new Service();
+            $service->setName($faker->randomElement($serviceNames));
+            $service->setPrice(mt_rand(500, 2000) / 100);
+            // $this->addReference($service,'service' );// Random price between 5 and 20
+
+            $manager->persist($service);
+            $services[] = $service;
+
+        }
 
         for ($i = 0; $i < 30; $i++) {
             $garment = new Garment();
             $garment->setDescription($faker->sentence);
             $garment->setType($faker->randomElement(['Shirt', 'Pants', 'Dress']));
             $garment->setMaterial($faker->randomElement(['Cotton', 'Wool', 'Silk']));
-            $garment->setOrders($faker->randomElement([$order]));
-            $garment->setUser($faker->randomElement([$admin]));
+            $garment->addService($faker->randomElement([$service]));
+
             // Set relationships if needed
 
             $manager->persist($garment);
         }
-        $services = ['Washing', 'Ironing', 'Dry Cleaning', 'Folding'];
+        for ($i = 0; $i < 20; $i++) {
 
-        foreach ($services as $serviceName) {
-            $service = new Service();
-            $service->setName($serviceName);
-            $service->setPrice(mt_rand(500, 2000) / 100); // Random price between 5 and 20
-
-            $manager->persist($service);
+            $item = new Item();
+            $item
+                ->setServiceQuantity($faker->numberBetween(1, 10))
+                ->setTotal($faker->numberBetween(1, 100))
+                ->setService($faker->randomElement([$service]))
+                ->setUser($faker->randomElement([$admin]))
+                ->setGarment($faker->randomElement([$garment]));
+            $manager->persist($item);
         }
+
 
 
 
